@@ -50,6 +50,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	protected $_obj_wp_enqueue;
   
     protected $_arr_init;
+	protected $_bool_remove_width_height;
 	
 	protected function __construct() {
 	  parent::__construct();
@@ -66,14 +67,16 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	
 	  $this->_arr_init = WP_ezMethods::ez_array_merge(array($this->init_defaults(), $arr_args));
 	  
+	  $this->_bool_remove_width_height = (bool)$this->_arr_init['remove_width_height_filter'];
+	  
 	  if ( $this->_arr_init['native'] !== true ){
 	    $this->_obj_wp_enqueue = Class_WP_ezClasses_ezCore_WP_Enqueue::ezc_get_instance();
 	    add_action( 'wp_enqueue_scripts', array($this,'wp_enqueue_picturefill_js') );
 	  }
 
-	  if ( $this->_arr_init['remove_width_height'] === true ){	  
-	    add_filter( 'post_thumbnail_html', array($this, 'remove_width_height_attributes'), 10 );
-	    add_filter( 'image_send_to_editor', array($this, 'remove_width_height_attributes'), 10 );
+	  if ( $this->_arr_init['remove_width_height_filter'] === true ){	  
+	    add_filter( 'post_thumbnail_html', array($this, 'filter_remove_width_height_attributes'), 10 );
+	    add_filter( 'image_send_to_editor', array($this, 'filter_remove_width_height_attributes'), 10 );
 	  }
 
 	  add_filter('image_send_to_editor', array($this, 'insert_data_attribute_with_id'), 10, 9);
@@ -87,13 +90,14 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
     public function init_defaults(){
 	
 	  $arr_defaults = array(
-	    'remove_width_height'	=> false,					// when inserting media into the_content(), remmove width= and height=
-	    'fallback'				=> false,					// use a fallback img?
-		'native'				=> false,					// if you want to load picturefill.js yourself then set this to true.
-		'async'					=> true,					// note: not being used atm. included for completeness
-		'media_query'			=> 'a',						// this value should be a valid key in the array in options_media_query()
-		'data_attribute'		=> trim('picturefill'),		// once you starting using this class DO NOT change this value. it'll muck up any previous usage.
-        ); 
+	  
+	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remmove width= and height=
+	    'fallback'						=> false,					// use a fallback img?
+		'native'						=> false,					// if you want to load picturefill.js yourself then set this to true.
+		'async'							=> true,					// note: not being used atm. included for completeness
+		'media_query'					=> 'a',						// this value should be a valid key in the array in options_media_query()
+		'data_attribute'				=> trim('picturefill'),		// once you starting using this class DO NOT change this value. it'll muck up any previous usage.
+        );
 		
 	  return $arr_defaults;
 	}
@@ -176,10 +180,25 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  return $arr_scripts_and_styles;
 	}
 	
-	
-	public function remove_width_height_attributes( $str_html ) {
-	
-   	  $str_html = preg_replace( '/(width|height)="\d*"\s/', "", $str_html );
+	/**
+	 * If you want to remove the width and height then you need to set _remove_width_height to true
+	 */
+    public function set_remove_width_height( $bool_flag = false ){
+	  
+	  $this->_bool_remove_width_height = false;
+	  if ( $bool_flag === true ){
+		$this->_bool_remove_width_height = true;
+	  }	  
+	}
+
+	/**
+	 *
+	 */
+	public function filter_remove_width_height_attributes( $str_html = '' ) {
+	  
+	  if ( $this->_bool_remove_width_height === true ){
+   	    $str_html = preg_replace( '/(width|height)="\d*"\s/', "", $str_html );
+	  }
 	  return $str_html;
 	}
 	
