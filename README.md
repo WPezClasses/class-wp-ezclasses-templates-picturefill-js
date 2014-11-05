@@ -25,3 +25,12 @@ https://github.com/WPezPlugins/wp-ezplugins-templates-picturefill-js
 - You can use it for images in the WP Media Library but *not* in the_content(). (See plugin example above.)
 
 - No WP options. All settings are done via code. Set it up once and move on. The chance of human error is mitigated.
+
+
+===============================================================================================
+
+#### More info on RWD images
+
+- http://alistapart.com/article/responsive-images-in-practice
+
+- https://html.spec.whatwg.org/multipage/embedded-content.html

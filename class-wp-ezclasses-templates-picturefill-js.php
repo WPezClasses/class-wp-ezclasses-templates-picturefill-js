@@ -29,6 +29,8 @@
 /**
  * == References == 
  *
+ * http://alistapart.com/article/responsive-images-in-practice
+ *
  * https://html.spec.whatwg.org/multipage/embedded-content.html
  *
  */
