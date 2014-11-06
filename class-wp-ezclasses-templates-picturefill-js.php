@@ -94,11 +94,12 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $arr_defaults = array(
 	  
 	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remmove width= and height=
-	    'fallback'						=> false,					// use a fallback img?
+	    'fallback'						=> true,					// use a fallback img?
 		'native'						=> false,					// if you want to load picturefill.js yourself then set this to true.
 		'async'							=> true,					// note: not being used atm. included for completeness
 		'media_query'					=> 'a',						// this value should be a valid key in the array in options_media_query()
 		'data_attribute'				=> trim('picturefill'),		// once you starting using this class DO NOT change this value. it'll muck up any previous usage.
+		'img_add_class'					=> ''						// for example, for Bootstrap you might want 'img-responsive' ref: http://getbootstrap.com/css/#images
         );
 		
 	  return $arr_defaults;
@@ -208,7 +209,9 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
      * Add data-responsive attribute
      */
     public function insert_data_attribute_with_id($html, $id, $caption, $title, $align, $url) {
-	  $html = str_replace('<img', '<img data-' . $this->_arr_init['data_attribute'] . '="' . $id . '"', $html);
+	
+	  $str_data_attribute = $this->_arr_init['data_attribute'];
+	  $html = str_replace('<img', '<img data-' . $str_data_attribute . '="' . $id . '"', $html);
 	  
 	  return $html;
     }
@@ -258,13 +261,27 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  
 	  // sort out the 
 	  $arr_mq = $this->options_media_query();
-	  $str_mq = $arr_mq[$this->_arr_init['media_query']];
-	  if ( isset($arr_mq[$str_mq_key]) ){ 
-	    $str_mq = $arr_mq[$str_mq_key];
-	  } elseif ( isset($arr_0_img_markup_1_id[2]) && isset($arr_mq[$arr_0_img_markup_1_id[2]]) ){
-	    // when using this method directly you can pass in a third arg to specify the mq you want for that particular img
+	  //	  $str_mq = $arr_mq[$this->_arr_init['media_query']];
+	  $str_mq_key = $this->_arr_init['media_query'];
+	  
+	  // when using this method directly you can pass in a third arg to specify the mq you want for that particular img
+	  if ( isset($arr_0_img_markup_1_id[2]) && isset($arr_mq[$arr_0_img_markup_1_id[2]]) ){ 
 	    $str_mq = $arr_mq[$arr_0_img_markup_1_id[2]];
-	  }
+	  } elseif ( isset($arr_mq[$str_mq_key]) ){ 
+	    $str_mq = $arr_mq[$str_mq_key];
+	  } 
+	  
+
+	  /**
+	   * when using this method directly you can pass in a fourth  arg to specify the class you want to add to the image <img> tag
+	   * for example, for Bootstrap you might want 'img-responsive' ref: http://getbootstrap.com/css/#images
+	   */
+	  $str_img_add_class = '';
+	  if ( isset($arr_0_img_markup_1_id[3]) ){ 
+	    $str_img_add_class = sanitize_text_field($arr_0_img_markup_1_id[3]);
+	  } elseif ( isset($this->_arr_init['img_add_class']) ){ 
+	    $str_img_add_class = sanitize_text_field($this->_arr_init['img_add_class']);
+	  } 
 		
         // Check image and mq id
         if( empty($image_id) || empty($str_mq)) {
@@ -275,7 +292,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
         preg_match('/class=[\'"](.*?)[\'"]/i', $img_markup, $arr_class_match);
         $class_names = '';
 		if ( ! empty($arr_class_match[1]) ) {
-		  $class_names = ' class="' . $arr_class_match[1]. '" ';
+		  $class_names = ' class="' . $arr_class_match[1]. ' ' . $str_img_add_class . '" ';
 		}
 
         // Check for fallback image
