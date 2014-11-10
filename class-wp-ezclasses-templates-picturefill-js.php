@@ -32,6 +32,8 @@
  * http://alistapart.com/article/responsive-images-in-practice
  *
  * https://html.spec.whatwg.org/multipage/embedded-content.html
+ * 
+ * http://ericportis.com/posts/2014/srcset-sizes/
  *
  */
  
@@ -143,7 +145,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	
 	  $arr_options_mq = array(
 
-	    'a'		=> '(min-width: 1200px) 100vw, (min-width: 992px) 100vw, (min-width: 768px) 100vw, (max-width: 480px) 100vw',
+	    'a'		=> '(min-width: 480px) 100vw, (min-width: 768px) 100vw, (min-width: 992px) 100vw, (min-width: 1200px) 100vw, 100vw',
 	  );
 	  
 	  return $arr_options_mq;
