@@ -97,9 +97,10 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  
 	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remmove width= and height=
 	    'fallback'						=> true,					// use a fallback img?
+		'fallback_size'					=> 'full',					// which image size should be used for the fallback
 		'native'						=> false,					// if you want to load picturefill.js yourself then set this to true.
 		'async'							=> true,					// note: not being used atm. included for completeness
-		'media_query'					=> 'a',						// this value should be a valid key in the array in options_media_query()
+		'sizes'							=> 'a',						// this value should be a valid key in the array in options_sizes()
 		'data_attribute'				=> trim('picturefill'),		// once you starting using this class DO NOT change this value. it'll muck up any previous usage.
 		'img_add_class'					=> ''						// for example, for Bootstrap you might want 'img-responsive' ref: http://getbootstrap.com/css/#images
         );
@@ -119,19 +120,19 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	    'thumb'		=> array(
 		  'active'		=> true,				// simple bool flag. when false this entry will be ignored
 		  'name'		=> 'thumbnail',			// name used for add_image_size()
-		  'bp'			=> 480,					// bp = break point. 'w' will defaults to the image's width setting (in WP), else specify your own bp int for this image name. 
+		  'w'			=> 'w',					// w = width. value 'w' defaults to the image's width setting (in WP), else specify your own integer for this image name. 
 		  ),
 		  
 	    'med'		=> array(
 		  'active'		=> true,
 		  'name'		=> 'medium',
-		  'bp'			=> 768
+		  'w'			=> 'w'
 		  ),	
 
 	    'lrg'		=> array(
 		  'active'		=> true,
 		  'name'		=> 'large',
-		  'bp'			=> 992
+		  'w'			=> 'w'
 		  ),		  
 	  );
 	  
@@ -140,15 +141,34 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	
 	/**
 	 * Again, probably something you'll reconfig in your class
+	 *
+	 * IMPORTANT - You must have at least one size. The default will be the first in the array. If there are no sizes (below) we quit / return
 	 */
-	public function options_media_query(){
+	public function options_sizes(){
 	
-	  $arr_options_mq = array(
+	  $arr_options_sizes = array(
 
 	    'a'		=> '(min-width: 480px) 100vw, (min-width: 768px) 100vw, (min-width: 992px) 100vw, (min-width: 1200px) 100vw, 100vw',
 	  );
 	  
-	  return $arr_options_mq;
+	  return $arr_options_sizes;
+	}
+	
+	/**
+	 * Again, probably something you'll reconfig in your class
+	 *
+	 * For a given options_sizes() key, which WP image sizes should be EXCLUDED from the srcset='...' list
+	 *
+	 * NOTE: The default is to use all WP sizes. If there is no key or the array for the key is empty or not an array then we go to the default (i.e., no exclude, use'em all).
+	 */
+	public function options_scrset_image_sizes_exclude(){
+	  
+	  $image_sizes_exclude = array(
+	  
+	    'a'		=> array(),
+	  );
+	  
+	  return $image_sizes_exclude;
 	}
 	
 	
@@ -169,7 +189,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $arr_scripts_and_styles = array(
 	    'picturefill_js_min'			=> array(	
 		  'active'						=> true,
-		  'host'						=> 'local',
+		  'host'						=> 'WPezClasses',
 		  'note'						=> "Scott Jehl: http://scottjehl.github.io/picturefill/",
 		  'conditional_tags'			=> array(),
 		  'type'						=> 'script',
@@ -178,7 +198,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		  'deps'						=> false,
 		  'ver'							=> '2.1.0',
 		  //	'media'					=> NULL,	
-		  'in_footer'					=> false,   // picturefill says to put it in the head
+		  'in_footer'					=> false,   // picturefill says to put it in the head. footer is too late
 		),					
 	  );
 	  
@@ -254,7 +274,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
       }
 	  
 	  // Check for existing image id
-      $imgsrc_full = wp_get_attachment_image_src($image_id, 'full');
+      $imgsrc_full = wp_get_attachment_image_src($image_id, $this->_arr_init['fallback_size']);
       if( $imgsrc_full === false ) {
         return $img_markup;
       }
@@ -262,17 +282,24 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $image_id = intval($image_id);
 	  
 	  // sort out the 
-	  $arr_mq = $this->options_media_query();
-	  //	  $str_mq = $arr_mq[$this->_arr_init['media_query']];
-	  $str_mq_key = $this->_arr_init['media_query'];
+	  $arr_sizes = $this->options_sizes();
+	  //	  $str_mq = $arr_mq[$this->_arr_init['sizes']];
+	  $str_sizes_key = $this->_arr_init['sizes'];
 	  
-	  // when using this method directly you can pass in a third arg to specify the mq you want for that particular img
-	  if ( isset($arr_0_img_markup_1_id[2]) && isset($arr_mq[$arr_0_img_markup_1_id[2]]) ){ 
-	    $str_mq = $arr_mq[$arr_0_img_markup_1_id[2]];
-	  } elseif ( isset($arr_mq[$str_mq_key]) ){ 
-	    $str_mq = $arr_mq[$str_mq_key];
-	  } 
-	  
+	  // when using this method directly you can pass in a third arg to specify the sizes[] you want for that particular img
+	  if ( isset($arr_0_img_markup_1_id[2]) && isset($arr_sizes[$arr_0_img_markup_1_id[2]]) ){ 
+	    $str_sizes_key = $arr_0_img_markup_1_id[2]; 
+	  } elseif ( ! isset($arr_sizes[$str_sizes_key]) ){ 
+	    // if all else fails, we'll look the first key in the array
+		reset($arr_sizes);
+	    $str_sizes_key = key($arr_sizes);
+		// if the sizes() is empty then return. no size means we can not continue
+		if ( empty($str_sizes_key)){
+		  return;
+		} 		
+	  }
+	  // we're good!
+	  $str_sizes = $arr_sizes[$str_sizes_key];
 
 	  /**
 	   * when using this method directly you can pass in a fourth  arg to specify the class you want to add to the image <img> tag
@@ -286,7 +313,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  } 
 		
         // Check image and mq id
-        if( empty($image_id) || empty($str_mq)) {
+        if( empty($image_id) || empty($str_sizes)) {
             return $img_markup;
         }
 
@@ -305,13 +332,25 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		
 		// returns all the registered images and their settings (width, height, crop)
 		$arr_get_image_sizes = WP_ezMethods::get_image_sizes();
+		
+		// let get the size names we'll be exclusing for this sizes[] key.
+		$arr_options_scrset_image_sizes_exclude = $this->options_scrset_image_sizes_exclude();
+		
+		$arr_scrset_image_exclude = array();
+		if ( isset($arr_options_scrset_image_sizes_exclude[$str_sizes_key]) && is_array($arr_options_scrset_image_sizes_exclude[$str_sizes_key]) ){
+		 $arr_scrset_image_exclude = $arr_options_scrset_image_sizes_exclude[$str_sizes_key];
+		}
 
         // Get the images of the whole that we're using for responsive purposes
         foreach($this->options_images() as $key => $arr_value) {
 		
 		  // some quick "validation" before we go on
 		  if ( isset($arr_value['active']) && isset($arr_value['name']) && isset($arr_get_image_sizes[$arr_value['name']]) && $arr_value['active'] === true ) {
-		  
+		    
+			// if the name is in the exclude array then skip it (i.e., continue) so it's not in the srcset
+		    if ( in_array($arr_value['name'], $arr_scrset_image_exclude) ) {
+			  continue;
+			}
 		    $mix_img_src = wp_get_attachment_image_src($image_id, $arr_value['name']);
             if( $mix_img_src === false ) {
               continue;
@@ -319,8 +358,8 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 			
 			$int_width = $arr_get_image_sizes[$arr_value['name']]['width'];
 			// default to the width?
-			if ( isset($arr_value['bp']) && strtolower($arr_value['bp']) != 'w' ){
-			  $int_width = intval($arr_value['bp']);
+			if ( isset($arr_value['w']) && strtolower($arr_value['w']) != 'w' ){
+			  $int_width = intval($arr_value['w']);
 			}
 		    $srcset[] = $mix_img_src[0] . ' ' . trim($int_width) . 'w, ';
 		  
@@ -332,7 +371,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
             return $img_markup;
         }
 		
-		$markup = '<img ' . $class_names . ' ' . $str_img_fallback . ' srcset="' . trim(implode($srcset), ', ') . '" sizes="' . $str_mq . '">';
+		$markup = '<img ' . $class_names . ' ' . $str_img_fallback . ' srcset="' . trim(implode($srcset), ', ') . '" sizes="' . $str_sizes . '">';
      return $markup;
     }
 
