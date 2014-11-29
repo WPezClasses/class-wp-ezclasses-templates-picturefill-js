@@ -1,8 +1,8 @@
 <?php
 /** 
- * An ez-tized fork of ChrisB's WordPress plugin RespImage. A plugin that made/makes Scott Jehl's picturefill.js WP-friendly. 
+ * An ez-Tized fork + makeover of ChrisB's WordPress plugin RespImage. A plugin that made / makes Scott Jehl's picturefill.js WP-friendly. 
  *
- * ChrisB: http://elf02.de/2014/07/14/respimage-wordpress-plugin/    Scott Jehl: http://scottjehl.github.io/picturefill/
+ * TODO   
  *
  * PHP version 5.3
  *
@@ -15,10 +15,14 @@
  */
  
 /**
- * == Change Log == 
+ * == Change Log ==
+ * 
+ * == 13 Nov 2014 ==
+ * --- FIXED: Cleaned up some naming and such
+ * --- ADDED: Method options_scrset_image_sizes_exclude() and associated functionality
  *
- * --- 9 October 2014 - Ready
- *
+ * == 9 October 2014 ==
+ * --- Ready!
  */
  
 /**
@@ -28,13 +32,18 @@
  
 /**
  * == References == 
- *
- * http://alistapart.com/article/responsive-images-in-practice
- *
- * https://html.spec.whatwg.org/multipage/embedded-content.html
  * 
- * http://ericportis.com/posts/2014/srcset-sizes/
+ * - ChrisB: http://elf02.de/2014/07/14/respimage-wordpress-plugin/
  *
+ * - Scott Jehl: http://scottjehl.github.io/picturefill/
+ *
+ * - http://scottjehl.github.io/picturefill/
+ *
+ * - http://alistapart.com/article/responsive-images-in-practice
+ *
+ * - https://html.spec.whatwg.org/multipage/embedded-content.html
+ * 
+ * - http://ericportis.com/posts/2014/srcset-sizes/
  */
  
 
@@ -47,9 +56,12 @@ if ( ! defined('ABSPATH')) {
 if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
   class Class_WP_ezClasses_Templates_Picturefill_js extends Class_WP_ezClasses_Master_Singleton {
   
-    protected $_file;	
-	protected $_url;
-	protected $_path;
+    private $_version;
+	private $_url;
+	private	$_path;
+	private $_path_parent;
+	private $_basename;
+	private $_file;
 		
 	protected $_obj_wp_enqueue;
   
@@ -63,18 +75,16 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	/**
 	 *
 	 */
-	public function ezc_init($arr_args = ''){
+	public function ez__construct($arr_args = ''){
 
-	  $this->_file = __FILE__ ;
-	  $this->_url = plugin_dir_url(__FILE__);
-	  $this->_path = plugin_dir_path(__FILE__);
+	  $this->setup();
 	
-	  $this->_arr_init = WP_ezMethods::ez_array_merge(array($this->init_defaults(), $arr_args));
+	  $this->_arr_init = WPezHelpers::ez_array_merge(array($this->init_defaults(), $arr_args));
 	  
 	  $this->_bool_remove_width_height = (bool)$this->_arr_init['remove_width_height_filter'];
 	  
 	  if ( $this->_arr_init['native'] !== true ){
-	    $this->_obj_wp_enqueue = Class_WP_ezClasses_ezCore_WP_Enqueue::ezc_get_instance();
+	    $this->_obj_wp_enqueue = Class_WP_ezClasses_ezCore_WP_Enqueue::ez_new();
 	    add_action( 'wp_enqueue_scripts', array($this,'wp_enqueue_picturefill_js') );
 	  }
 
@@ -106,6 +116,17 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
         );
 		
 	  return $arr_defaults;
+	}
+	
+	protected function setup(){
+	
+	  $this->_version = '0.5.0';
+	  $this->_url = plugin_dir_url( __FILE__ );
+	  $this->_path = plugin_dir_path( __FILE__ );
+	  $this->_path_parent = dirname($this->_path);
+	  $this->_basename = plugin_basename( __FILE__ );
+	  $this->_file = __FILE__ ;
+	
 	}
 	
 	/**
@@ -148,7 +169,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	
 	  $arr_options_sizes = array(
 
-	    'a'		=> '(min-width: 480px) 100vw, (min-width: 768px) 100vw, (min-width: 992px) 100vw, (min-width: 1200px) 100vw, 100vw',
+	    'a'		=> '(min-width: 1200px) 100vw, (min-width: 992px) 100vw, (min-width: 768px) 100vw, (min-width: 480px) 100vw, 100vw)'
 	  );
 	  
 	  return $arr_options_sizes;
@@ -331,7 +352,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
         }
 		
 		// returns all the registered images and their settings (width, height, crop)
-		$arr_get_image_sizes = WP_ezMethods::get_image_sizes();
+		$arr_get_image_sizes = WPezHelpers::ez_get_image_sizes();
 		
 		// let get the size names we'll be exclusing for this sizes[] key.
 		$arr_options_scrset_image_sizes_exclude = $this->options_scrset_image_sizes_exclude();
