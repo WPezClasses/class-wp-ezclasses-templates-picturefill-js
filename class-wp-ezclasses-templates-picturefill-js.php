@@ -342,7 +342,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
         preg_match('/class=[\'"](.*?)[\'"]/i', $img_markup, $arr_class_match);
         $class_names = '';
 		if ( ! empty($arr_class_match[1]) ) {
-		  $class_names = ' class="' . $arr_class_match[1]. ' ' . $str_img_add_class . '" ';
+		  $class_names = ' class="' . trim($arr_class_match[1]. ' ' . $str_img_add_class) . '" ';
 		}
 
         // Check for fallback image
