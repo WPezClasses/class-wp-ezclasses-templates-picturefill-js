@@ -106,7 +106,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $arr_defaults = array(
 	  
 	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remmove width= and height=
-	    'fallback'						=> true,					// use a fallback img?
+	    'fallback'						=> false,					// use a fallback img?
 		'fallback_size'					=> 'full',					// which image size should be used for the fallback
 		'native'						=> false,					// if you want to load picturefill.js yourself then set this to true.
 		'async'							=> true,					// note: not being used atm. included for completeness
@@ -353,6 +353,8 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		
 		// returns all the registered images and their settings (width, height, crop)
 		$arr_get_image_sizes = WPezHelpers::ez_get_image_sizes();
+	
+	    $arr_options_images = $this->options_images();
 		
 		// let get the size names we'll be exclusing for this sizes[] key.
 		$arr_options_scrset_image_sizes_exclude = $this->options_scrset_image_sizes_exclude();
@@ -363,7 +365,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		}
 
         // Get the images of the whole that we're using for responsive purposes
-        foreach($this->options_images() as $key => $arr_value) {
+        foreach($arr_options_images as $key => $arr_value) {
 		
 		  // some quick "validation" before we go on
 		  if ( isset($arr_value['active']) && isset($arr_value['name']) && isset($arr_get_image_sizes[$arr_value['name']]) && $arr_value['active'] === true ) {
