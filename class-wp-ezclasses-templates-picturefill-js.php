@@ -62,7 +62,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	private $_path_parent;
 	private $_basename;
 	private $_file;
-		
+			
 	protected $_obj_wp_enqueue;
   
     protected $_arr_init;
@@ -112,7 +112,8 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		'async'							=> true,					// note: not being used atm. included for completeness
 		'sizes'							=> 'a',						// this value should be a valid key in the array in options_sizes()
 		'data_attribute'				=> trim('picturefill'),		// once you starting using this class DO NOT change this value. it'll muck up any previous usage.
-		'img_add_class'					=> ''						// for example, for Bootstrap you might want 'img-responsive' ref: http://getbootstrap.com/css/#images
+		'img_add_class'					=> '',						// for example, for Bootstrap you might want 'img-responsive' ref: http://getbootstrap.com/css/#images
+		'img_add_alt'					=> ''
         );
 		
 	  return $arr_defaults;
@@ -271,21 +272,40 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 
         $content = preg_replace_callback(
             '/<img.*?'. $this->_arr_init['data_attribute'] . '=[\'"](.*?)[\'"].*?>/i',
-            array($this, 'insert_picturefill_args'),
+            array($this, 'insert_picturefill_args_proxy'),
             $content
         );
         return $content;
     }
+	
+	/**
+	 * When filtering the_content (in method: filter_picturefill_images()) we need a proxy to map the args in order to
+	 * match method: insert_picturefill_args() expectations
+	 */
+	public function insert_picturefill_args_proxy($arr_args){
+	
+	  return self::insert_picturefill_args( array('markup'=> $arr_args[0], 'attachment_id'=> $arr_args[1]) );
+	}
 
 
     /**
      * Replace images with srcset image markup
+	 *
+	 * 'markup' - the <img ...>
+	 * 'attachment_id - the WP attachment id
+	 * 'sizes_key' - array key for options_sizes() to be used for this image
+	 * 'add_class' - supplement the classes (class="...") in your 'markup', if ya want
+	 * 'add_alt' - supplement the alt="..." in your 'markup', if ya want
      */
-    public function insert_picturefill_args($arr_0_img_markup_1_id) {
+    public function insert_picturefill_args( $arr_args = array() ) { 
+	
+	  if ( empty($arr_args) || ! isset($arr_args['markup']) || ! isset($arr_args['attachment_id'])){
+	    return $arr_args;
+	  }
 	  
-	  $img_markup = $arr_0_img_markup_1_id[0];
-      $image_id = $arr_0_img_markup_1_id[1];
-
+	  $img_markup = $arr_args['markup']; 
+      $image_id = $arr_args['attachment_id']; 
+	  
       // Check for embedded mq id
       if( strpos($image_id, '/') ) {
         $a = explode('/', $image_id);
@@ -308,8 +328,8 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $str_sizes_key = $this->_arr_init['sizes'];
 	  
 	  // when using this method directly you can pass in a third arg to specify the sizes[] you want for that particular img
-	  if ( isset($arr_0_img_markup_1_id[2]) && isset($arr_sizes[$arr_0_img_markup_1_id[2]]) ){ 
-	    $str_sizes_key = $arr_0_img_markup_1_id[2]; 
+	  if ( isset($arr_args['sizes_key']) && isset($arr_sizes[$arr_args['sizes_key']]) ){ 
+	    $str_sizes_key = $arr_args['sizes_key']; 
 	  } elseif ( ! isset($arr_sizes[$str_sizes_key]) ){ 
 	    // if all else fails, we'll look the first key in the array
 		reset($arr_sizes);
@@ -327,10 +347,17 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	   * for example, for Bootstrap you might want 'img-responsive' ref: http://getbootstrap.com/css/#images
 	   */
 	  $str_img_add_class = '';
-	  if ( isset($arr_0_img_markup_1_id[3]) ){ 
-	    $str_img_add_class = sanitize_text_field($arr_0_img_markup_1_id[3]);
+	  if ( isset($arr_args['add_class']) ){ 
+	    $str_img_add_class = sanitize_text_field($arr_args['add_class']);
 	  } elseif ( isset($this->_arr_init['img_add_class']) ){ 
 	    $str_img_add_class = sanitize_text_field($this->_arr_init['img_add_class']);
+	  } 
+	  
+	  $str_img_add_alt = '';
+	  if ( isset($arr_args['add_alt']) ){ 
+	    $str_img_add_alt = sanitize_text_field($arr_args['add_alt']);
+	  } elseif ( isset($this->_arr_init['img_add_alt']) ){ 
+	    $str_img_add_alt = sanitize_text_field($this->_arr_init['img_add_alt']);
 	  } 
 		
         // Check image and mq id
@@ -343,6 +370,13 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
         $class_names = '';
 		if ( ! empty($arr_class_match[1]) ) {
 		  $class_names = ' class="' . trim($arr_class_match[1]. ' ' . $str_img_add_class) . '" ';
+		}
+	
+        // Get alt
+        preg_match('/alt=[\'"](.*?)[\'"]/i', $img_markup, $arr_alt_match);
+        $alt_names = '';
+		if ( ! empty($arr_alt_match[1]) ) {
+		  $alt_names = ' alt="' . trim($arr_alt_match[1]. ' ' . $str_img_add_alt) . '" ';
 		}
 
         // Check for fallback image
@@ -394,9 +428,9 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
             return $img_markup;
         }
 		
-		$markup = '<img ' . $class_names . ' ' . $str_img_fallback . ' srcset="' . trim(implode($srcset), ', ') . '" sizes="' . $str_sizes . '">';
+		$markup = '<img ' . $class_names . ' ' . $alt_names . ' ' . $str_img_fallback . ' srcset="' . trim(implode($srcset), ', ') . '" sizes="' . $str_sizes . '">';
      return $markup;
     }
-
+	
   }	
 }
