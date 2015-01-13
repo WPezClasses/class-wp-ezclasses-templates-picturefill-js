@@ -218,7 +218,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		  'handle'						=> 'picturefilljs_min',
 		  'src'							=> $this->_url . 'js/picturefill.min.js',
 		  'deps'						=> false,
-		  'ver'							=> '2.1.0',
+		  'ver'							=> '2.2.0-beta',
 		  //	'media'					=> NULL,	
 		  'in_footer'					=> false,   // picturefill says to put it in the head. footer is too late
 		),					
