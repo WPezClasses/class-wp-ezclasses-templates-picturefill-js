@@ -108,6 +108,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remmove width= and height=
 	    'fallback'						=> false,					// use a fallback img?
 		'fallback_size'					=> 'full',					// which image size should be used for the fallback
+		'fallback_url'					=> false,					// perhaps you want to specify a particular fallback image
 		'native'						=> false,					// if you want to load picturefill.js yourself then set this to true.
 		'async'							=> true,					// note: not being used atm. included for completeness
 		'sizes'							=> 'a',						// this value should be a valid key in the array in options_sizes()
@@ -315,8 +316,9 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
       }
 	  
 	  // Check for existing image id
-      $imgsrc_full = wp_get_attachment_image_src($image_id, $this->_arr_init['fallback_size']);
-      if( $imgsrc_full === false ) {
+      //$imgsrc_full = wp_get_attachment_image_src($image_id, $this->_arr_init['fallback_size']);
+	  $str_img_url = wp_get_attachment_url($image_id);
+      if( $str_img_url === false ) {
         return $img_markup;
       }
 
@@ -379,10 +381,22 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		  $alt_names = ' alt="' . trim($arr_alt_match[1]. ' ' . $str_img_add_alt) . '" ';
 		}
 
+	//  'fallback'						=> false,					// use a fallback img?
+	//	'fallback_size'					=> 'full',					// which image size should be used for the fallback
+	//	'fallback_url'					=> false,					// perhaps you want to specify a particular fallback image	  
+			
         // Check for fallback image
         $str_img_fallback = '';
 		if ( $this->_arr_init['fallback'] === true ){
-		  $str_img_fallback = ' src="' . $imgsrc_full[0] . '"';
+		  if ( $this->_arr_init['fallback_url'] !== false ){
+		    $str_img_url = $this->_arr_init['fallback_url'];
+		  } else {
+		    $mix_img_src = wp_get_attachment_image_src( $image_id, $this->_arr_init['fallback_size'] );
+			if ( $mix_img_src !== false ){
+			  $str_img_url = $mix_img_src[0];
+			}
+		  }
+		  $str_img_fallback = ' src="' . $str_img_url . '"';
         }
 		
 		// returns all the registered images and their settings (width, height, crop)
