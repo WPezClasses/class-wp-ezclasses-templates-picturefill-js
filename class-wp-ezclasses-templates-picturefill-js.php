@@ -132,16 +132,16 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	}
 	
 	/**
-	 * Where the image options magic happens. chances are very good you're gotta rework this method once you extend this class
+	 * Where the image options magic happens. chances are 100% you're gotta rework this method once you extend this class
 	 * 
 	 * Getting your current image sizes (see examples): http://codex.wordpress.org/Function_Reference/get_intermediate_image_sizes
 	 */
-	public function options_images(){
+	public function options_images_todo(){
 	
 	  $arr_options_images = array(
 	  
 	    'thumb'		=> array(
-		  'active'		=> true,				// simple bool flag. when false this entry will be ignored
+		  'active'		=> true,				// simple bool flag. when false this entry will be ignored. helpful to swap things in and out quickly
 		  'name'		=> 'thumbnail',			// name used for add_image_size()
 		  'w'			=> 'w',					// w = width. value 'w' defaults to the image's width setting (in WP), else specify your own integer for this image name. 
 		  ),
@@ -167,7 +167,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	 *
 	 * IMPORTANT - You must have at least one size. The default will be the first in the array. If there are no sizes (below) we quit / return
 	 */
-	public function options_sizes(){
+	public function options_sizes_todo(){
 	
 	  $arr_options_sizes = array(
 
@@ -184,7 +184,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	 *
 	 * NOTE: The default is to use all WP sizes. If there is no key or the array for the key is empty or not an array then we go to the default (i.e., no exclude, use'em all).
 	 */
-	public function options_scrset_image_sizes_exclude(){
+	public function options_scrset_image_sizes_exclude_todo(){
 	  
 	  $image_sizes_exclude = array(
 	  
@@ -325,7 +325,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $image_id = intval($image_id);
 	  
 	  // sort out the 
-	  $arr_sizes = $this->options_sizes();
+	  $arr_sizes = $this->options_sizes_todo();
 	  //	  $str_mq = $arr_mq[$this->_arr_init['sizes']];
 	  $str_sizes_key = $this->_arr_init['sizes'];
 	  
@@ -402,10 +402,10 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		// returns all the registered images and their settings (width, height, crop)
 		$arr_get_image_sizes = WPezHelpers::ez_get_image_sizes();
 	
-	    $arr_options_images = $this->options_images();
+	    $arr_options_images = $this->options_images_todo();
 		
 		// let get the size names we'll be exclusing for this sizes[] key.
-		$arr_options_scrset_image_sizes_exclude = $this->options_scrset_image_sizes_exclude();
+		$arr_options_scrset_image_sizes_exclude = $this->options_scrset_image_sizes_exclude_todo();
 		
 		$arr_scrset_image_exclude = array();
 		if ( isset($arr_options_scrset_image_sizes_exclude[$str_sizes_key]) && is_array($arr_options_scrset_image_sizes_exclude[$str_sizes_key]) ){
@@ -413,11 +413,13 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 		}
 
         // Get the images of the whole that we're using for responsive purposes
+
+		$srcset = array();
         foreach($arr_options_images as $key => $arr_value) {
-		
+
 		  // some quick "validation" before we go on
 		  if ( isset($arr_value['active']) && isset($arr_value['name']) && isset($arr_get_image_sizes[$arr_value['name']]) && $arr_value['active'] === true ) {
-		    
+		
 			// if the name is in the exclude array then skip it (i.e., continue) so it's not in the srcset
 		    if ( in_array($arr_value['name'], $arr_scrset_image_exclude) ) {
 			  continue;
