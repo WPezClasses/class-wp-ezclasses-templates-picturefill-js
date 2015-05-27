@@ -16,12 +16,15 @@
  
 /**
  * == Change Log ==
+ *
+ * == 26 May 2015 - v0.5.2 ==
+ *  --- CHANGED: picturefill.js src is now: cdnjs.cloudflare.com
  * 
- * == 13 Nov 2014 ==
+ * == 13 Nov 2014 - v0.5.1==
  * --- FIXED: Cleaned up some naming and such
  * --- ADDED: Method options_scrset_image_sizes_exclude() and associated functionality
  *
- * == 9 October 2014 ==
+ * == 9 October 2014 - v0.5.0 ==
  * --- Ready!
  */
  
@@ -105,7 +108,7 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	
 	  $arr_defaults = array(
 	  
-	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remmove width= and height=
+	    'remove_width_height_filter'	=> false,					// when inserting media into the_content(), remove width= and height=
 	    'fallback'						=> false,					// use a fallback img?
 		'fallback_size'					=> 'full',					// which image size should be used for the fallback
 		'fallback_url'					=> false,					// perhaps you want to specify a particular fallback image
@@ -212,14 +215,14 @@ if (! class_exists('Class_WP_ezClasses_Templates_Picturefill_js') ) {
 	  $arr_scripts_and_styles = array(
 	    'picturefill_js_min'			=> array(	
 		  'active'						=> true,
-		  'host'						=> 'WPezClasses',
+		  'host'						=> 'cdnjs.cloudflare.com',
 		  'note'						=> "Scott Jehl: http://scottjehl.github.io/picturefill/",
 		  'conditional_tags'			=> array(),
 		  'type'						=> 'script',
 		  'handle'						=> 'picturefilljs_min',
-		  'src'							=> $this->_url . 'js/picturefill.min.js',
+		  'src'							=> 'https://cdnjs.cloudflare.com/ajax/libs/picturefill/2.3.1/picturefill.min.js',
 		  'deps'						=> false,
-		  'ver'							=> '2.2.0-beta',
+		  'ver'							=> 'cdnjs_2.3.1',
 		  //	'media'					=> NULL,	
 		  'in_footer'					=> false,   // picturefill says to put it in the head. footer is too late
 		),					
